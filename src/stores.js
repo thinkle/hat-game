@@ -58,7 +58,9 @@ export function gameFromJson (json) {
  }
 
 
-const playerStore = writable();
+const playerStore = writable(
+    localStorage.getItem('defaultPlayer')
+);
 
 export async function addPlayerNameToGame (name) {
     let $game;
@@ -79,6 +81,7 @@ export const player = {
     get : playerStore.get,
     subscribe : playerStore.subscribe,
     set : async function (name) {
+        localStorage.setItem('defaultPlayer',name)
         addPlayerNameToGame(name)
         playerStore.set(name);
     }
