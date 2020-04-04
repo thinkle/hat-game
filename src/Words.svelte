@@ -8,20 +8,27 @@
  
  import strings from './strings.js';
  let words = []
- export let session;
- export let step;
+ //export let game;
+ //export let step;
 
- import {localHat} from './stores.js';
+ import {localHat,game,player} from './stores.js';
+
  let newWord = '';
  let completed = 0;
- 
+ $: step  = $game.step
+ $: myTurn = $game.step==strings.playStep && $game.currentPlayer == $player
+
 
  let busy = false;
  console.log('who knows...');
- $: if (step==strings.pullStep) {
-     console.log('yuhhuh');
-     console.log('step is pull!... get words');
-     getWords();
+var wasMyTurn;
+ $: if ($game.step==strings.playStep) {
+     if (myTurn && !wasMyTurn) {
+         console.log('yuhhuh');
+         console.log('now it is my turn!... get words');
+         getWords();
+         wasMyTurn = myTurn;
+     }
  }
 
  $: wordsInHat = words.filter((w)=>w.data.outOfHat==false).map((w)=>w.data.word);
@@ -48,7 +55,7 @@
              API_URL,
              {method:'POST',
               body:JSON.stringify({
-                  session,
+                  session:$game.id,
                   word:newWord,
                   mode:'add',
               })
@@ -80,7 +87,7 @@
              API_URL,
              {method:'POST',
               body:JSON.stringify({
-                  session,
+                  session:$game.id,
                   mode:'remove',
                   id:word.ref['@ref'].id,
               })}
@@ -116,7 +123,7 @@
 
  
  async function putAllBack () {
-     const response = await fetch(API_URL,{method:'post',body:JSON.stringify({mode:'reset',session})});
+     const response = await fetch(API_URL,{method:'post',body:JSON.stringify({mode:'reset',session:$game.id})});
      await handleNewWords(response);
  }
 
@@ -134,7 +141,7 @@
                       body:JSON.stringify({
                           mode : 'outAndList',
                           id : dbWord.ref['@ref'].id,
-                          session,
+                          session:$game.id,
                       })
                      }
                  );
@@ -179,18 +186,18 @@
  }
 
  async function getWords () {
-     console.log('getWords',session);
-     if (session) {
+     console.log('getWords',$game.id);
+     if ($game.id) {
          const response = await fetch(API_URL,{method:'post',
                                                body:JSON.stringify(
                                                    {mode:'list',
-                                                    session}
+                                                    session:$game.id}
                                                )}
          );
          handleNewWords(response)
      }
      else {
-         console.log('no session, no words');
+         console.log('no game, no words');
      }
  }
 
@@ -207,17 +214,17 @@
         {#if busy}Busy busy busy...{/if}
         <div class="head" >
             {#if step==strings.addStep||step==strings.reviewStep}<h2>{words.length} added...</h2>{/if}
-            {#if step==strings.pullStep}<h2>Going... <Timer/></h2>{/if}
+            {#if step==strings.playStep}<h2>PLAY! Going... <Timer/></h2>{/if}
         </div>
         <div class="middle">
             {#if step==strings.reviewStep||step==strings.addStep}        
             Add Word: <input  disabled={busy} placeholder="New Word..." bind:value={newWord}> <button on:click={submitWord}>+</button>
             {/if}
-            {#if step==strings.wait}
+            {#if step==strings.playStep && !myTurn}
             tick, tock, tick, tock...
             <div class="big"><Timer/></div>
             {/if}
-            {#if step==strings.pullStep}
+            {#if step==strings.playStep && myTurn}
             <Hat 
                 on:reset={putAllBack}
                 on:next={onHatNext}

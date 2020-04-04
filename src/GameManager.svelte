@@ -1,51 +1,104 @@
 <script>
- let sessionId;
+ let gameId;
  let gameName;
  let currentStep;
  let editNameMode=false;
  import strings from './strings.js';
- import { session, sessionFromJson, updateSessionDB } from './stores.js';
+ import { game, gameFromJson, updateGameDB, player } from './stores.js';
  import { onMount } from 'svelte';
 
- const API_URL = '/.netlify/functions/session' 
+ const API_URL = '/.netlify/functions/game' 
 
- const unsubscribe = session.subscribe(
+ function takeTurn () {
+     $game.currentPlayer = $player;
+     updateGameDB(
+         $game
+     )
+ }
+
+ const unsubscribe = game.subscribe(
      value => {
          if (value) {
-             sessionId = value.id;
+             gameId = value.id;
              gameName = value.title;
              currentStep = value.step||steps[0]
          }
          else {
-             sessionId = undefined;
+             gameId = undefined;
              gameName = undefined;
          }
      }
  );
 
- 
- $: { if (sessionId) {
+ let alreadyUpdating = true;
+ let gameUpdater = setInterval(
+     async function () {
+         if (alreadyUpdating) {
+             console.log('Busy skip update');
+             return;
+         }
+         console.log('gameUpdater updating...');
+         alreadyUpdating = true;
+         try {
+             var response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:$game.id})});
+             var data = await response.json();
+         }
+         catch (err) {
+             console.log('Error updating',err);
+         }
+         if (data) {
+             console.log('Latest game data: ',data);
+             game.update(oldGame => {
+                 newGame = gameFromJson(data);
+                 var mergedPlayers;
+                 if (newGame.players && oldGame.players) {
+                     mergedPlayers = [...oldGame.players];
+                     for (let p of oldGame.players) {
+                         if (mergedPlayers.indexOf(p)==-1) {
+                             mergedPlayers.push(p);
+                         }
+                     }
+                 }
+                 else {
+                     mergedPlayers = newGame.players || oldGame.players
+                 }
+                 return {
+                     ...oldGame,
+                     ...newGame,
+                     players : mergedPlayers,
+                 }
+             });
+         }
+         alreadyUpdating = false;
+     },
+     1500
+ );
+
+ $: { if (gameId) {
      window.history.pushState(
-         `session ${sessionId}`,
+         `game ${gameId}`,
          gameName,
-         `/${sessionId}`
+         `/${gameId}`
      );
  }
  }
 
- async function newSession () {
-     console.log('new session!');
+ async function newGame () {
+     console.log('new game!');
+     alreadyUpdating = true;
      const response = await fetch(`${API_URL}?mode=new`);
      const data = await response.json();
      console.log(data);
-     session.update(s => sessionFromJson(data))
+     game.update(s => gameFromJson(data))
+     alreadyUpdating = false;
  }
 
- function leaveSession () {
-     console.log('Leaving session :(');
-     session.update(s => undefined);
+ function leaveGame () {
+     console.log('Leaving game :(');
+     clearInterval(gameUpdater)
+     game.update(s => undefined);
      window.history.pushState(
-         `no session`,
+         `no game`,
          `no game`,
          `/`
      );
@@ -53,9 +106,9 @@
 
  function updateName () {
      editNameMode = false;
-     const formData = new FormData(document.forms.updateSessionName);
-     return updateSessionDB({
-         id : sessionId,
+     const formData = new FormData(document.forms.updateGameName);
+     return updateGameDB({
+         id : gameId,
          title : formData.get('title')
      });
  }
@@ -63,8 +116,8 @@
  const steps = strings.steps
 
  function updateStep (step) {
-     updateSessionDB(
-         {id:sessionId,
+     updateGameDB(
+         {id:gameId,
           step:step}
      );
  }
@@ -73,13 +126,15 @@
  onMount( async () => {
      // grab our thing...
      console.log('onMount!');
-     const sessionIdFromUrl = window.location.pathname.split('/')[1];
-     if (sessionIdFromUrl) {
-         console.log('Grab session from URL');
-         const response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:sessionIdFromUrl})});
+     const gameIdFromUrl = window.location.pathname.split('/')[1];
+     if (gameIdFromUrl) {
+         alreadyUpdating = true;
+         console.log('Grab game from URL');
+         const response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:gameIdFromUrl})});
          const data = await response.json();
-         console.log('Session data: ',data);
-         session.update(s => sessionFromJson(data));
+         console.log('Game data: ',data);
+         game.update(s => gameFromJson(data));
+         alreadyUpdating = false;
      }
  });
 
@@ -94,9 +149,9 @@
 </script>
 
 <div>
-    {#if !sessionId}
+    {#if !gameId}
     <div class="modal">
-        <button id="new" on:click="{newSession}">Start Session?</button>
+        <button id="new" on:click="{newGame}">Start Game?</button>
     </div>
     {:else}
       <select on:change={changeStep}>
@@ -105,15 +160,29 @@
           {/each}
       </select>
       {#if editNameMode}
-      <form name="updateSessionName">
-          <input type="hidden"  name="id" value={sessionId}>
+      <form name="updateGameName">
+          <input type="hidden"  name="id" value={gameId}>
           <input type="text"  name="title" value="{gameName}">
           <button type="submit" on:click|preventDefault={updateName}>Set Name</button>
       </form>
       {:else}
       {gameName} <button on:click={()=>editNameMode=true}>✎</button>
       {/if}
-      <button on:click="{leaveSession}">Leave Session</button>
+
+      {#if currentStep==strings.playStep && !$player}
+      <div>
+          Player <input type="text" on:blur={(e)=>$player=e.target.value}>
+      </div>
+      {:else}
+      <div class="name" >{$player} <button on:click={()=>$player=''}>✎</button></div>
+      {/if}
+      
+      
+      <button>
+          <button on:click={takeTurn}>MY TURN!</button>
+      </button>
+
+      <button on:click="{leaveGame}">Leave Game</button>
       
     {/if}
 </div>

@@ -1,14 +1,14 @@
 <script>
- import {session} from './stores.js';
+ import {game} from './stores.js';
  export let name;
- let sessionId;
+ let gameId;
  let step;
- import SessionManager from './SessionManager.svelte';
+ import GameManager from './GameManager.svelte';
  import Words from './Words.svelte';
  import Hat from './Hat.svelte';
- const unsubscribe = session.subscribe(
+ const unsubscribe = game.subscribe(
      value => {
-         sessionId = value && value.id;
+         gameId = value && value.id;
          step = value && value.step;
      }
  );
@@ -18,13 +18,13 @@
 <main>
      <div>
          <div class="centerThing" >
-         {#if sessionId}
-         <Words session={sessionId} step={step} />
+         {#if gameId}
+         <Words game={gameId} step={step} />
          {/if}
          </div>
          <div class="bannerThing">
          <h2>{name}</h2>
-         <SessionManager />
+         <GameManager />
          </div>
      </div>
 

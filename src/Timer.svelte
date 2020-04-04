@@ -1,9 +1,9 @@
 <script>
- import {session,updateSessionDB} from './stores.js';
+ import {game,updateCurrentGame} from './stores.js';
  import {onMount} from 'svelte';
 
- $:start = $session && !isNaN($session.startTime) && $session.startTime;
- $:timer = $session && $session.timerLength;
+ $:start = $game && !isNaN($game.startTime) && $game.startTime;
+ $:timer = $game && $game.timerLength;
 
  var timerLength = 60;
 
@@ -13,7 +13,6 @@
 
  onMount(() => {
      const interval = setInterval(() => {
-         console.log('Update now!')
 	 now = new Date();
      }, 1000);
 
@@ -23,23 +22,18 @@
  });
 
  function startTimer () {
-     const data = {
+     updateCurrentGame( {
          startTime : new Date().getTime(),
          timerLength : timerLength
-     }
-     updateSessionDB({
-         id:$session.id,
-         ...data});
+     })
  }
 
  function cancelTimer () {
-     const data = {
+     updateCurrentGame({
          startTime : 'stop',
          timerLength : 0,
      }
-     updateSessionDB({
-         id:$session.id,
-         ...data});
+     )
  }
 
 </script>
