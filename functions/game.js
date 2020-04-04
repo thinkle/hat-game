@@ -29,6 +29,7 @@ async function faunaQuery (query) {
 
 exports.handler = async (event, context) => {
     let params;
+    console.log('game called in context',JSON.stringify(context));
     console.log('queryStringParameters=',event.queryStringParameters);
     if (event.httpMethod !== 'POST') {
         console.log('use parameters from queryString');
@@ -40,6 +41,9 @@ exports.handler = async (event, context) => {
     }
     //const gameId = params.id // event.path.match(/([^\/]*)\/*$/)[0];
     console.log('params=',params);
+    const dataParams = [
+        'step','title','startTime','currentPlayer','players'
+    ]
     if (params.mode == 'setup') {
         return doSetup();
     }
@@ -51,18 +55,24 @@ exports.handler = async (event, context) => {
         console.log("UPDATE W DATA!");
         return updateGame(params.id,params.data);
     }
-    else if (params.step) {
-        console.log('UPDATE STEP');
-        return updateGame(params.id,{step:params.step})
+    else if (dataParams.find((p)=>params[p])) {
+        const dataToUpdate = {}
+        for (let p of dataParams) {
+            if (params[p]) {
+                dataToUpdate[p] = params[p]
+            }
+        }
+        console.log("UPDATE W PARAMS!");
+        return updateGame(params.id,dataToUpdate);
     }
-    else if (params.title) {
-        console.log("UPDATE W TITLE!");
-        return updateGame(params.id,{title:params.title})
-    }
-    else if (params.startTime) {
-        console.log('UPDATE TIMER!');
-        return await updateGame(params.id,{startTime:''+params.startTime,timerLength:''+params.timerLength});
-    }
+    // else if (params.startTime) {
+    //     console.log('UPDATE TIMER!');
+    //     return await updateGame(params.id,{startTime:''+params.startTime,timerLength:''+params.timerLength});
+    // }
+    // else if (params.currentPlayer||params.) {
+    //     const data = {currentPlayer:params.currentPlayer}
+    //     return await updateGame(params.id,{currentPlayer})
+    // }
     else if (params.id) {
         console.log("RETRIEVE FROM ID (fallback)!");
         return getGame(params.id);
