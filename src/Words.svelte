@@ -20,15 +20,13 @@
 
 
  let busy = false;
- console.log('who knows...');
-var wasMyTurn;
+ var wasMyTurn;
  $: if ($game.step==strings.playStep) {
      if (myTurn && !wasMyTurn) {
-         console.log('yuhhuh');
          console.log('now it is my turn!... get words');
          getWords();
-         wasMyTurn = myTurn;
      }
+     wasMyTurn = myTurn;
  }
 
  $: wordsInHat = words.filter((w)=>w.data.outOfHat==false).map((w)=>w.data.word);
