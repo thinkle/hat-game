@@ -1,6 +1,5 @@
 import {writable, derived} from 'svelte/store';
 
-export const session = writable();
 export const localHat = writable([
     {word:'bunny',outOfHat:true},
     {word:'dog',outOfHat:false},
@@ -8,11 +7,22 @@ export const localHat = writable([
     {word:'deer',outOfHat:true},
     {word:'elephant',outOfHat:true, current:true},
 ]);
+    
+export const game = writable();
 
 
-const API_URL = '/.netlify/functions/session'
+const API_URL = '/.netlify/functions/game'
 
-export async function updateSessionDB (data) {
+export async function updateCurrentGame (data) {
+    let $game;
+    game.subscribe((v)=>$game = v)
+    updateGameDB({
+        id:$game.id,
+        ...data,
+    });
+}
+
+export async function updateGameDB (data) {
      const postData = JSON.stringify(
          data
      );
@@ -24,7 +34,7 @@ export async function updateSessionDB (data) {
      try {
          const json = await response.json()
          console.log('Updated!',postData,'=>',json);
-         session.update(s => sessionFromJson(json));
+         game.update(s => gameFromJson(json));
      }
      catch (err) {
          console.log('Submitted',postData);
@@ -33,7 +43,7 @@ export async function updateSessionDB (data) {
      }
  }
 
-export function sessionFromJson (json) {
+export function gameFromJson (json) {
      if (json && json.data && json.ref) {
          return {
              ...json.data,
@@ -41,8 +51,41 @@ export function sessionFromJson (json) {
          }
      }
      else {
-         console.log('FAILED TO GET MEANINGFUL SESSION');
+         console.log('FAILED TO GET MEANINGFUL GAME');
          console.log('uh oh',json);
          return undefined;
      }
  }
+
+
+const playerStore = writable();
+
+export async function addPlayerNameToGame (name) {
+    let $game;
+    game.subscribe((v)=>$game = v)
+    if ($game && name) {
+        if (!$game.players || $game.players.indexOf(name)==-1) {
+            if (!$game.players) {
+                $game.players = []
+            }
+            console.log('Add player to list of players!');
+            $game.players.push(name)
+            updateCurrentGame($game);
+        }
+    }
+}
+
+export const player = {
+    get : playerStore.get,
+    subscribe : playerStore.subscribe,
+    set : async function (name) {
+        addPlayerNameToGame(name)
+        playerStore.set(name);
+    }
+}
+
+export async function takeTurn () {
+    let $game, $player;
+    game.subscribe((v)=>$game=v);
+    player.subscribe((v)=>$player=v);
+}
