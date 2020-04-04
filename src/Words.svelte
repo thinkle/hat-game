@@ -2,19 +2,27 @@
  import { onMount } from 'svelte';
  import Hat from './Hat.svelte';
  import { fade, fly, crossfade, scale } from 'svelte/transition';
-
+ import Timer from './Timer.svelte';
  import { cubicOut, elasticOut } from 'svelte/easing';
 
  
  import strings from './strings.js';
  let words = []
  export let session;
- import {localHat} from './stores.js';
-
  export let step;
+
+ import {localHat} from './stores.js';
  let newWord = '';
- let busy = false;
  let completed = 0;
+ 
+
+ let busy = false;
+ console.log('who knows...');
+ $: if (step==strings.pullStep) {
+     console.log('yuhhuh');
+     console.log('step is pull!... get words');
+     getWords();
+ }
 
  $: wordsInHat = words.filter((w)=>w.data.outOfHat==false).map((w)=>w.data.word);
  
@@ -108,35 +116,33 @@
 
  
  async function putAllBack () {
-     console.log('Put them back...');
      const response = await fetch(API_URL,{method:'post',body:JSON.stringify({mode:'reset',session})});
      await handleNewWords(response);
  }
 
  async function onHatNext (event) {
-     // Let's complete this...
-     const complete = event.detail.complete
-     console.log('onHatNext...',complete);
+     // Sync up any changes to $localHat to the DB
      var wordId;
-     words.forEach(
-         (w)=>{
-             if (complete.indexOf(w.data.word)>-1) {
-                 wordId = w.ref['@ref'].id
+     var response;
+     await $localHat.forEach(
+         async function (lhw) {
+             const dbWord = words.find((dw)=>dw.data.word==lhw.word);
+             if (lhw.outOfHat && !lhw.current && !dbWord.outOfHat) {
+                 response = await fetch(
+                     API_URL,
+                     {method:'post',
+                      body:JSON.stringify({
+                          mode : 'outAndList',
+                          id : dbWord.ref['@ref'].id,
+                          session,
+                      })
+                     }
+                 );
              }
          }
      );
-     console.log('Got ID',wordId,'for',complete);
-     const response = await fetch(
-         API_URL,
-         {method:'post',
-          body:JSON.stringify({
-              mode : 'outAndList',
-              id : wordId,
-              session,
-          })
-         }
-     );
-     handleNewWords(response);
+     console.log('Update words...');
+     if (response) {handleNewWords(response);}
  }
 
  function onFloor () {
@@ -176,10 +182,10 @@
      console.log('getWords',session);
      if (session) {
          const response = await fetch(API_URL,{method:'post',
-                                           body:JSON.stringify(
-                                               {mode:'list',
-                                                session}
-                                           )}
+                                               body:JSON.stringify(
+                                                   {mode:'list',
+                                                    session}
+                                               )}
          );
          handleNewWords(response)
      }
@@ -188,41 +194,35 @@
      }
  }
 
-  onMount(async () => {
-      await getWords()
-  }); 
+ onMount(async () => {
+     await getWords()
+ }); 
 
 
  
 </script>
 
 <words>    
-    <h3>We got words! {words.length} [{wordsInHat}]</h3>
-    {#each words as word}
-    <li>{word.data.word} {#if word.data.outOfHat} Out {:else} In {/if}</li>
-    {/each}
-    {#if step==strings.pullStep}
-    Word Thing
-    <Hat 
-        on:reset={putAllBack}        
-    />
-    {:else}
     <div class="verticalAlign">
+        {#if busy}Busy busy busy...{/if}
         <div class="head" >
-            {#if step==strings.addStep||strings.reviewStep}<h2>{words.length} added...</h2>{/if}
-            {#if step==strings.pullStep}
-            <div>
-                <h1>Game On!</h1>
-                {#if wordsLeft}
-                <h3>{completeWords.length} done. {wordsLeft} words left in hat</h3>
-                {/if}
-            </div>
-            {/if}
-
+            {#if step==strings.addStep||step==strings.reviewStep}<h2>{words.length} added...</h2>{/if}
+            {#if step==strings.pullStep}<h2>Going... <Timer/></h2>{/if}
         </div>
-        {#if step==strings.reviewStep||step==strings.addStep}
         <div class="middle">
+            {#if step==strings.reviewStep||step==strings.addStep}        
             Add Word: <input  disabled={busy} placeholder="New Word..." bind:value={newWord}> <button on:click={submitWord}>+</button>
+            {/if}
+            {#if step==strings.wait}
+            tick, tock, tick, tock...
+            <div class="big"><Timer/></div>
+            {/if}
+            {#if step==strings.pullStep}
+            <Hat 
+                on:reset={putAllBack}
+                on:next={onHatNext}
+            />
+            {/if}
         </div>
         <div class="foot">
             {#if step==strings.reviewStep}
@@ -237,50 +237,7 @@
             </ul>
             {/if}
         </div>
-        {/if}
-        
-        
-        {#if step==strings.pullStep}
-        <div id="theWord">
-                {#if currentWord}
-            <!--  style={getEnteringStyle($wordFromHat)} -->
-            {#each [currentWord] as currentWord}
-            <div class="throwable new"
-                 in:receive="{{key:currentWord.data&&currentWord.data.word}}" 
-                 out:send="{{key:currentWord.data&&currentWord.data.word}}"
-                 id={currentWord.data.word}
-            >
-                {currentWord.data.word}
-            </div>
-            {/each}
-            {/if}                
-            {#if !currentWord && wordsLeft && !gettingWord}
-            <button id="theWord" on:click={pullWord}>Pull New Word</button>
-            {/if}
-        </div>        
-        <div class="foot">
-            {#each completeWords as completeWord}
-            <div class="throwable last"
-                 in:receive="{{key:completeWord.data&&completeWord.data.word}}"
-                 out:send="{{key:completeWord.data&&completeWord.data.word}}"
-                 id={completeWord.data.word}
-            >
-                 {completeWord.data.word}
-            </div>
-            {/each}
-            <div class="bigbutton" >
-            {#if !wordsLeft || !currentWord}
-            <button on:click={putAllBack}>Reset hat...</button>
-            {/if}
-            {#if currentWord}
-            <button on:click={tradeOut}>Trade (Back in Hat)</button>
-            <button on:click={onFloor}>Success! (Toss on the Floor)</button>
-            {/if}
-            </div>
-        </div>
-        {/if}
     </div>
-    {/if}
 </words>
 
 
