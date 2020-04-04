@@ -34,10 +34,8 @@
  let gameUpdater = setInterval(
      async function () {
          if (alreadyUpdating) {
-             console.log('Busy skip update');
              return;
          }
-         console.log('gameUpdater updating...');
          alreadyUpdating = true;
          try {
              var response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:$game.id})});
@@ -47,7 +45,6 @@
              console.log('Error updating',err);
          }
          if (data) {
-             console.log('Latest game data: ',data);
              game.update(oldGame => {
                  newGame = gameFromJson(data);
                  var mergedPlayers;
