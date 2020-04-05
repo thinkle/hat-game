@@ -204,7 +204,9 @@
 
  .center {
      text-align: center;
-     margin: auto;
+     flex-grow: 2;
+     display: flex;
+     align-self: stretch;
  }
 
  .foot * {
