@@ -1,10 +1,12 @@
 <script>
  import { onMount } from 'svelte';
+ import Entry from './Entry.svelte';
  import Hat from './Hat.svelte';
  import { fade, fly, crossfade, scale } from 'svelte/transition';
  import Timer from './Timer.svelte';
  import { cubicOut, elasticOut } from 'svelte/easing';
-
+ var skips=0;
+ var score=0;
  
  import strings from './strings.js';
  let words = []
@@ -33,6 +35,7 @@
  
  const API_URL = '/.netlify/functions/words'
  function isWordValid () {
+     if (!newWord) {return}
      for (var word of words) {
          if (word.data && word.data.word &&  word.data.word.toUpperCase() === newWord.toUpperCase()) {
              return false
@@ -125,8 +128,13 @@
      await handleNewWords(response);
  }
 
+ function onSwap (event) {
+     skips += 1;
+ }
+
  async function onHatNext (event) {
      // Sync up any changes to $localHat to the DB
+     if (!event.detail.isFirst) {score += 1;}
      var wordId;
      var response;
      await $localHat.forEach(
@@ -212,20 +220,39 @@
         {#if busy}Busy busy busy...{/if}
         <div class="head" >
             {#if step==strings.addStep||step==strings.reviewStep}<h2>{words.length} added...</h2>{/if}
-            {#if step==strings.playStep}<h2>PLAY! Going... <Timer/></h2>{/if}
+            {#if step==strings.playStep}<Timer/>
+            <div>
+                <span class="green" >{score} words</span>
+                <span class="red" >{skips} skips</span>
+                <button class="lowkey" on:click="{()=>{score=0;skips=0}}">Reset Score</button>
+            </div>
+            {/if}
         </div>
         <div class="middle">
+            {#if !$game.players || $game.players.length <= 1}
+            (Copy paste the URL above to invite others to your game!)
+            <br>Here's <a href={window.location}> a copyable link</a> if you prefer
+            {/if}
             {#if step==strings.reviewStep||step==strings.addStep}        
-            Add Word: <input  disabled={busy} placeholder="New Word..." bind:value={newWord}> <button on:click={submitWord}>+</button>
+            <Entry
+                label="Add Word"
+                on:submit={submitWord} disabled={busy} placeholder="New Word..." bind:value={newWord}/>
             {/if}
             {#if step==strings.playStep && !myTurn}
-            tick, tock, tick, tock...
-            <div class="big"><Timer/></div>
+            <div>
+                <div>tick, tock, tick, tock...</div>
+                {#if !$player}
+                (enter your player name to get started)
+                {:else}
+                (click My Turn to take the turn over)
+                {/if}
+            </div>
             {/if}
             {#if step==strings.playStep && myTurn}
             <Hat 
                 on:reset={putAllBack}
                 on:next={onHatNext}
+                on:return="{onSwap}"
             />
             {/if}
         </div>
@@ -274,7 +301,6 @@
  .verticalAlign {
      display: flex;
      flex-direction: column;
-     height: calc(100vh - 110px);
      margin-bottom: 110px;
  }
  #theWord {
@@ -292,5 +318,8 @@
  }
  .foot {
      margin-top: auto
+ }
+ input {
+     font-size: 3em;
  }
 </style>
