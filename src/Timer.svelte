@@ -1,8 +1,8 @@
 <script>
  import {game,updateCurrentGame} from './stores.js';
  import {onMount} from 'svelte';
-
- $:start = $game && !isNaN($game.startTime) && $game.startTime;
+ var localStartTime
+ $:start = $game && !isNaN($game.startTime) && $game.startTime || !isNaN(localStartTime) && localStartTime ;
  $:timer = $game && $game.timerLength;
 
  var timerLength = 60;
@@ -22,15 +22,17 @@
  });
 
  function startTimer () {
+     localStartTime = new Date().getTime(),
      updateCurrentGame( {
-         startTime : new Date().getTime(),
+         startTime : localStartTime,
          timerLength : timerLength
      })
  }
 
  function cancelTimer () {
+     localStartTime = 'stop';
      updateCurrentGame({
-         startTime : 'stop',
+         startTime : localStartTime,
          timerLength : 0,
      }
      )
