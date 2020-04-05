@@ -3,9 +3,9 @@
  import { localHat } from './stores.js';
  import {elasticOut,quintOut} from 'svelte/easing';
  import { flip } from 'svelte/animate';
- $:hat = $localHat.filter((w)=>w.outOfHat==false)
- $:complete = $localHat.filter((w)=>w.outOfHat==true&&!w.current)
- $:current = $localHat.filter((w)=>w.current)
+ $:hat = $localHat.filter((w)=>w.word&&w.outOfHat==false)
+ $:complete = $localHat.filter((w)=>w.word&&w.outOfHat==true&&!w.current)
+ $:current = $localHat.filter((w)=>w.word&&w.current)
  import { createEventDispatcher } from 'svelte';
  const dispatch = createEventDispatcher();
 
@@ -41,6 +41,7 @@
  
  function next () {
      //complete = [...complete,...current]
+     const wasFirst = current.length == 0;
      current.forEach(
          (w)=>w.current = false
      )
@@ -55,6 +56,7 @@
      dispatch('next',
               {
                   current,
+                  isFirst : wasFirst,
                   last : complete[complete.length-1],
                   hat, complete
               });
@@ -103,12 +105,27 @@
      }
  });
 
+
+ function handleWordClick () {
+     next();
+ }
+
+ function handlePileClick () {
+     if (!current.length) {
+         next()
+     }
+     else {
+         swap();
+     }
+ }
+
 </script>
 <hat>
     <!-- <div>Hat has: {hat.length}, Current has {current.length}, Complete has {complete.length}</div>-->
     <div id="hat">
         {#each hat as w (w)}
         <div class="word" animate:flip id={w.word}
+             on:click="{handlePileClick}"
              style={getRandomPosition(w.word)}
              out:send="{{key:w.word}}" in:receive="{{key:w.word}}">{w.word}</div>
         {/each}
@@ -116,10 +133,10 @@
     <div id="current">
         <div class="placeholder">
             {#if current.length==0 && hat.length==0}
-            <button on:click={reset}>Reset</button>
+            <button class="lowkey" on:click={reset}>Reset</button>
             {/if}
             {#each current as w (w.word)}
-            <div class="word" animate:flip id={w.word} out:send="{{key:w.word}}" in:receive="{{key:w.word}}">{w.word}</div>
+            <div on:click="{handleWordClick}" class="word" animate:flip id={w.word} out:send="{{key:w.word}}" in:receive="{{key:w.word}}">{w.word}</div>
             {/each}
         </div>
         {#if hat.length}<button class="stop" on:click={swap}>Swap</button>{/if}
@@ -127,7 +144,7 @@
     </div>
     <div class="bottom">
         <div class="buttons">
-            <b>{complete.length} complete</b> <button on:click={reset}>Reset</button>
+            <b>{complete.length} complete</b> <button class="lowkey" on:click={reset}>Reset</button>
         </div>
         
         <div class="complete">
@@ -144,6 +161,7 @@
  hat {
      display: flex;
      flex-direction: column;
+     align-self: stretch;
  }
 
  #current {
@@ -162,9 +180,7 @@
  .bottom {
      margin-top: auto;
      min-height: 6em;
-     position: absolute;
-     bottom: 0;
-     left: 0;
+     position: relative;
      width: 100%;
      height: 10em;
  }
