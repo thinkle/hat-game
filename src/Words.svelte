@@ -23,12 +23,16 @@
 
  let busy = false;
  var wasMyTurn;
+ var lastStep;
  $: if ($game.step==strings.playStep) {
-     if (myTurn && !wasMyTurn) {
+     if (myTurn && !wasMyTurn || lastStep != $game.step) {
          console.log('now it is my turn!... get words');
          getWords();
      }
      wasMyTurn = myTurn;
+     lastStep = $game.step
+ } else {
+     lastStep = $game.step;
  }
 
  $: wordsInHat = words.filter((w)=>w.data.outOfHat==false).map((w)=>w.data.word);
@@ -89,7 +93,7 @@
              {method:'POST',
               body:JSON.stringify({
                   session:$game.id,
-                  mode:'remove',
+                  mode:'delete',
                   id:word.ref['@ref'].id,
               })}
          );
@@ -238,6 +242,9 @@
                 label="Add Word"
                 on:submit={submitWord} disabled={busy} placeholder="New Word..." bind:value={newWord}/>
             {/if}
+            {#if step==strings.playStep && words.length==0}
+            <h3>Oops. You forgot to Add Words.</h3>
+            {/if}
             {#if step==strings.playStep && !myTurn}
             <div>
                 <div>tick, tock, tick, tock...</div>
@@ -263,7 +270,7 @@
                 {#each words as word}
                 <li id={word.id}>
                     {word.data.word}
-                    <button on:click={()=>deleteWord(word)}>-</button>
+                    <button class="lowkey" on:click={()=>deleteWord(word)}>-</button>
                 </li>
                 {/each}
             </ul>
