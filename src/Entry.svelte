@@ -89,7 +89,7 @@ div div:focus-within {
  }
 
  input {
-     font-size: 3em;
+     font-size: 1.5em;
  }
 
 </style>
