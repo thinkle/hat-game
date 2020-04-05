@@ -1,5 +1,3 @@
-//const querystring = require('querystring');
-//console.log('querystring is ',querystring);
 const faunadb = require('faunadb');
 
 const q = faunadb.query;
@@ -10,7 +8,6 @@ const client = new faunadb.Client({
 async function faunaQuery (query) {
     try {
         const response = await client.query(query);
-        console.log('Successful response: ',response);
         return {
             statusCode : 200,
             body : JSON.stringify(response)
@@ -29,18 +26,13 @@ async function faunaQuery (query) {
 
 exports.handler = async (event, context) => {
     let params;
-    console.log('game called in context',JSON.stringify(context));
-    console.log('queryStringParameters=',event.queryStringParameters);
     if (event.httpMethod !== 'POST') {
-        console.log('use parameters from queryString');
         params = event.queryStringParameters;
     }
     else {
-        console.log('use post body');
         params = JSON.parse(event.body);
     }
     //const gameId = params.id // event.path.match(/([^\/]*)\/*$/)[0];
-    console.log('params=',params);
     const dataParams = [
         'step','title','startTime','currentPlayer','players'
     ]
@@ -48,11 +40,9 @@ exports.handler = async (event, context) => {
         return doSetup();
     }
     if (params.mode == 'new') {
-        console.log("NEW!");
         return newGame();
     }
     else if (params.data) {
-        console.log("UPDATE W DATA!");
         return updateGame(params.id,params.data);
     }
     else if (dataParams.find((p)=>params[p])) {
@@ -62,22 +52,13 @@ exports.handler = async (event, context) => {
                 dataToUpdate[p] = params[p]
             }
         }
-        console.log("UPDATE W PARAMS!");
         return updateGame(params.id,dataToUpdate);
     }
-    // else if (params.startTime) {
-    //     console.log('UPDATE TIMER!');
-    //     return await updateGame(params.id,{startTime:''+params.startTime,timerLength:''+params.timerLength});
-    // }
-    // else if (params.currentPlayer||params.) {
-    //     const data = {currentPlayer:params.currentPlayer}
-    //     return await updateGame(params.id,{currentPlayer})
-    // }
     else if (params.id) {
-        console.log("RETRIEVE FROM ID (fallback)!");
         return getGame(params.id);
     }
     else {
+        console.log('No valid mode given with request',params)
         return {
             statusCode : 400,
             body : 'No valid mode or id given',
