@@ -162,13 +162,15 @@
      display: flex;
      flex-direction: column;
      align-self: stretch;
+     width: 100%;
+     flex-grow: 2;
  }
 
  #current {
      padding: 1em;
      font-size: 2em;
      font-weight: bold;
-     min-height: 8em;
+     z-index: 2;
  }
 
  .bottom .buttons {
@@ -179,15 +181,16 @@
 
  .bottom {
      margin-top: auto;
-     min-height: 6em;
      position: relative;
      width: 100%;
-     height: 10em;
+     flex-grow: 2;
+     display: flex;
+     flex-direction: column;
  }
 
  .complete {
      width: 100%;
-     height: 4em;
+     flex-grow: 2;
      position: relative;
  }
  
@@ -197,8 +200,8 @@
 
  #hat {
      margin-bottom: auto;
-     min-height: 10em;
      position: relative;
+     flex-grow: 2;
  }
 
  #hat .word {
