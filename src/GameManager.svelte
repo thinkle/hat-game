@@ -1,8 +1,10 @@
 <script>
  let gameId;
+ let nameInput;
  let gameName;
  let currentStep;
  let editNameMode=false;
+ import Words from './Words.svelte';
  import strings from './strings.js';
  import { game, gameFromJson, updateGameDB, player } from './stores.js';
  import { onMount } from 'svelte';
@@ -103,10 +105,9 @@
 
  function updateName () {
      editNameMode = false;
-     const formData = new FormData(document.forms.updateGameName);
      return updateGameDB({
          id : gameId,
-         title : formData.get('title')
+         title : nameInput.value
      });
  }
 
@@ -145,46 +146,104 @@
 
 </script>
 
-<div>
-    {#if !gameId}
-    <div class="modal">
+<div class="container">
+    <div class="head" >
+        {#if gameId}
+        <div class="name left">
+            {#if !$player}
+            Player <input type="text" on:blur={(e)=>$player=e.target.value}>
+            {:else}
+            {$player} <button class="lowkey" on:click={()=>$player=''}>✎</button>
+            {/if}
+        </div>
+        <select on:change={changeStep}>
+            {#each steps as step}
+            <option value={step} selected={currentStep==step}>{step}</option>
+            {/each}
+        </select>
+        <div class="right">
+            {#if currentStep==strings.playStep && $player!=$game.currentPlayer}
+            <button on:click={takeTurn}>MY TURN!</button>
+            {/if}
+        </div>
+        {/if}
+    </div> <!-- end head -->
+    <div class="center" >
+        {#if !gameId}
         <button id="new" on:click="{newGame}">Start Game?</button>
+        {:else}
+        <Words/>
+        {/if}
+    </div> <!-- end center -->
+    <div class="foot" >
+        {#if gameId}
+        {#if editNameMode}
+        <input type="text"  name="title" bind:this={nameInput} value="{gameName}">
+        <button type="submit" on:click|preventDefault={updateName}>Set Name</button>
+        {:else}
+        {gameName} <button class="lowkey" on:click={()=>editNameMode=true}>✎</button>
+        {/if}        
+        <button class="right" on:click="{leaveGame}">Leave Game</button>
+        {/if}
     </div>
-    {:else}
-      <select on:change={changeStep}>
-          {#each steps as step}
-          <option value={step} selected={currentStep==step}>{step}</option>
-          {/each}
-      </select>
-      {#if editNameMode}
-      <form name="updateGameName">
-          <input type="hidden"  name="id" value={gameId}>
-          <input type="text"  name="title" value="{gameName}">
-          <button type="submit" on:click|preventDefault={updateName}>Set Name</button>
-      </form>
-      {:else}
-      {gameName} <button on:click={()=>editNameMode=true}>✎</button>
-      {/if}
-
-      {#if currentStep==strings.playStep && !$player}
-      <div>
-          Player <input type="text" on:blur={(e)=>$player=e.target.value}>
-      </div>
-      {:else}
-      <div class="name" >{$player} <button on:click={()=>$player=''}>✎</button></div>
-      {/if}
-      
-      
-      <button>
-          <button on:click={takeTurn}>MY TURN!</button>
-      </button>
-
-      <button on:click="{leaveGame}">Leave Game</button>
-      
-    {/if}
 </div>
 
 <style>
+ .left {
+     margin-right: auto;
+ }
+ .right {
+     margin-left: auto;
+ }
+ .foot,.head {
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+     align-self: stretch;
+ }
+
+ .center {
+     text-align: center;
+     margin: auto;
+ }
+
+ .foot * {
+     margin-right: 1em;
+ }
+
+ .foot button {
+     background-color: black;
+     color: #888;
+ }
+
+ .foot {
+     background-color: black;
+     min-height: 2em;
+     border-top: 3px solid #777;
+     color: white;
+ }
+
+ .foot button {
+     border:none;
+ }
+ .foot button:hover {
+     border: 1px solid white;
+ }
+
+ select {
+     background-color: white;
+     color: #222;
+     min-width: 7em;
+     max-width: 12em;
+     font-weight: bold;
+     height: 2em;
+     margin: auto;
+ }
+
+ button, entry, select {
+     font-size: 1.5em;
+ }
+ 
  .modal {
      position: fixed;
      width: 100vw;
@@ -199,19 +258,18 @@
      left: 300px;
      position: relative;
  }
- div {
-     display: flex;
-     flex-direction: row;
- }
- form button {
-     font-size: 1em;
-     padding: 3px;
-     border: 1px solid #777;
- }
+
  button#new {
      border: 3px solid #222;
      padding: 2em;
      font-size: 3em;
+ }
+
+ .container {
+     display: flex;
+     flex-direction: column;
+     flex-grow: 2;
+     align-items: center;
  }
 
 </style>
