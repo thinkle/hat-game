@@ -299,6 +299,7 @@
      margin-bottom: auto;
      display: flex;
      flex-grow: 2;
+     flex-direction: column;
  }
  .bigbutton button {
      font-size: 2em;
