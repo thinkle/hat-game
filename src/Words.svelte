@@ -219,7 +219,6 @@
  
 </script>
 
-<words>    
     <div class="verticalAlign">
         {#if busy}Busy busy busy...{/if}
         <div class="head" >
@@ -277,8 +276,6 @@
             {/if}
         </div>
     </div>
-</words>
-
 
 <style>
  .container {
@@ -297,9 +294,11 @@
      font-size: 1em;
      color: blue;
  }
-  .middle {
+ .middle {
      margin-top: auto;
      margin-bottom: auto;
+     display: flex;
+     flex-grow: 2;
  }
  .bigbutton button {
      font-size: 2em;
@@ -308,7 +307,7 @@
  .verticalAlign {
      display: flex;
      flex-direction: column;
-     margin-bottom: 110px;
+     flex-grow: 2;
  }
  #theWord {
      font-size: 3em;
@@ -324,7 +323,8 @@
      margin-bottom: auto;
  }
  .foot {
-     margin-top: auto
+     margin-top: auto;
+     z-index: 2;
  }
  input {
      font-size: 3em;
