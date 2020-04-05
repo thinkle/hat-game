@@ -41,15 +41,15 @@
     <div>
         Tick... 
         {#if start}
-        <span>{secondsTicked} of {timer} seconds...</span>
+        <span>{Math.max(secondsTicked,0)} of {timerLength} seconds...</span>
         {#if secondsTicked > timerLength}
         <b>{secondsTicked - timerLength} Over!</b>
         {/if}
-        <button on:click="{startTimer}">Reset</button>
+        <button class="lowkey" on:click="{startTimer}">Reset</button>
         {:else}
-        <button on:click={startTimer}>Start Clock</button>
+        <button class="lowkey" on:click={startTimer}>Start Clock</button>
         {/if}
-        <button on:click="{cancelTimer}">Cancel</button>
+        <button class="lowkey" on:click="{cancelTimer}">Cancel</button>
 
 </div>
 </main>
