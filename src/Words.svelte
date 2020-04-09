@@ -13,7 +13,7 @@
  //export let game;
  //export let step;
 
- import {localHat,game,player} from './stores.js';
+ import {localHat,game,player,updateCurrentGame} from './stores.js';
 
  let newWord = '';
  let completed = 0;
@@ -174,25 +174,28 @@
      const data = await response.json();
      console.log('words will be',data.data);
      words = data.data;
-     console.log('Set words to',words);
-     $localHat = words.map(
-         (w)=>{
-             const oldCopy = $localHat.find((lw)=>lw.word==w.data.word);
-             if (!oldCopy) {
+     console.log('Had ',words.length);
+     words = words.filter(
+         (w)=>words.find((ow)=>ow.data.word==w.data.word)==w
+     );
+     console.log('Filtered dups: ',words.length);
+     $localHat = words
+         .map(
+             (w)=>{
+                 const oldCopy = $localHat.find((lw)=>lw.word==w.data.word);
+                 if (!oldCopy) {
+                     return {
+                         word: w.data.word,
+                         outOfHat : w.data.outOfHat
+                     }
+                 }
                  return {
-                     word: w.data.word,
-                     outOfHat : w.data.outOfHat
+                     word : w.data.word,
+                     outOfHat : oldCopy.current && true || w.data.outOfHat,
+                     current : oldCopy.current
                  }
              }
-             return {
-                 word : w.data.word,
-                 outOfHat : oldCopy.current && true || w.data.outOfHat,
-                 current : oldCopy.current
-             }
-         }
-     );
-
-
+         )
  }
 
  async function getWords () {
@@ -216,7 +219,7 @@
  }); 
 
 
- 
+         
 </script>
 
     <div class="verticalAlign">
@@ -240,6 +243,9 @@
             <Entry
                 label="Add Word"
                 on:submit={submitWord} disabled={busy} placeholder="New Word..." bind:value={newWord}/>
+            {#if words.length >= 15}
+            <div style="text-align:right;padding-top:0.5em;"><button on:click={()=>updateCurrentGame({step:strings.playStep})}>Play</button></div>
+            {/if}
             {/if}
             {#if step==strings.playStep && words.length==0}
             <h3>Oops. You forgot to Add Words.</h3>
