@@ -309,6 +309,8 @@
      display: flex;
      flex-direction: column;
      flex-grow: 2;
+     justify-content: center;
+     align-items: center;
  }
  #theWord {
      font-size: 3em;
