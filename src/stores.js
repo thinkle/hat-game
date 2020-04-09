@@ -92,3 +92,20 @@ export async function takeTurn () {
     game.subscribe((v)=>$game=v);
     player.subscribe((v)=>$player=v);
 }
+export var localStartTime;
+export function startTimer ({timerLength=60}={}) {
+     localStartTime = new Date().getTime(),
+     updateCurrentGame( {
+         startTime : localStartTime,
+         timerLength : timerLength
+     })
+ }
+
+export function cancelTimer () {
+     localStartTime = 'stop';
+     updateCurrentGame({
+         startTime : localStartTime,
+         timerLength : 0,
+     }
+     )
+ }
