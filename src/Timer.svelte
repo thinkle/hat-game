@@ -1,7 +1,7 @@
 <script>
- import {game,updateCurrentGame} from './stores.js';
+ import {game,startTimer,cancelTimer,localStartTime} from './stores.js';
  import {onMount} from 'svelte';
- var localStartTime
+ 
  $:start = $game && !isNaN($game.startTime) && $game.startTime || !isNaN(localStartTime) && localStartTime ;
  $:timer = $game && $game.timerLength;
 
@@ -21,22 +21,6 @@
      };
  });
 
- function startTimer () {
-     localStartTime = new Date().getTime(),
-     updateCurrentGame( {
-         startTime : localStartTime,
-         timerLength : timerLength
-     })
- }
-
- function cancelTimer () {
-     localStartTime = 'stop';
-     updateCurrentGame({
-         startTime : localStartTime,
-         timerLength : 0,
-     }
-     )
- }
  function getProgressStyle () {
      if (secondsTicked > timerLength) {
          return "background-color:red;width:100%"
