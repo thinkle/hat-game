@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     }
     //const gameId = params.id // event.path.match(/([^\/]*)\/*$/)[0];
     const dataParams = [
-        'step','title','startTime','currentPlayer','players'
+        'step','title','startTime','currentPlayer','players','timerLength'
     ]
     if (params.mode == 'setup') {
         return doSetup();
