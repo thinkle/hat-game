@@ -1,4 +1,5 @@
 <script>
+ 
  import {game} from './stores.js';
  export let name;
  let gameId;
@@ -14,10 +15,10 @@
  
 </script>
 
-<main>
-    <brand>{name}</brand>
-    <div><GameManager /></div>
-</main>
+<div id="hat-game">
+    <brand>Name-In-Hat Game</brand>
+    <GameManager/>
+</div>
 
 <style>
  brand {
@@ -26,13 +27,15 @@
      color: #aaa;
      text-align: center;
      height: 22px;
-     display: flex;
-     align-items: center;
-     justify-content: center;
      background-color: black;
+     padding-top: 0.5em;
+     padding-bottom: 0.5em;
  }
  div {
      height: calc(100vh - 22px);
      display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: stretch;
  }
  </style>
