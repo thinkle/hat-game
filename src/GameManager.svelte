@@ -74,27 +74,27 @@
          });
      }
      alreadyUpdating = false;
+     let timeoutTime = lastInterval;
      if ($game.startTime && !isNaN($game.startTime)) {
          // when should we check...
          const endTime = $game.timerLength * 1000 + $game.startTime
          const now = new Date().getTime();
          if (endTime > now) {
-             console.log('Check again in ',endTime-now,'ms');
-             setTimeout(checkForUpdates,endTime - now);
+             timeoutTime = endTime - now;
          }
          else {
-             // Otherwise, we are overdue...
-             // we'll do a kind of reverse backoff... i.e. if it's 1 second past due, check in one second,
-             // if it's one minute, check in a minute, and so on...
-             console.log('Check again in ',-1*(endTime-now),'ms');
-             setTimeout(checkForUpdates,-1 * (endTime - now));
+             timeoutTime = -1 * (endTime - now);
+         }
+         if (isNaN(timeoutTime) || timeoutTime < 500) {
+             timeoutTime = lastInterval;
+             lastInterval *= 2;
          }
      }
      else {
          lastInterval = lastInterval * 2;
-         console.log('exponential backoff... check in',lastInterval);
-         setTimeout(checkForUpdates,lastInterval);
      }
+     console.log('check again in',timeoutTime/1000);
+     setTimeout(checkForUpdates,timeoutTime);
  }
 
  let lastInterval = 2000
