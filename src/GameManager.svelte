@@ -1,4 +1,5 @@
 <script>
+
  let gameId;
  let nameInput;
  let gameName;
@@ -6,7 +7,7 @@
  let editNameMode=false;
  import Words from './Words.svelte';
  import strings from './strings.js';
- import { game, gameFromJson, updateGameDB, player } from './stores.js';
+ import { game, gameFromJson, updateGameDB, player, startTimer } from './stores.js';
  import { onMount } from 'svelte';
 
  const API_URL = '/.netlify/functions/game' 
@@ -16,6 +17,7 @@
      updateGameDB(
          $game
      )
+     setTimeout(startTimer,1000);
  }
 
  const unsubscribe = game.subscribe(
@@ -32,45 +34,79 @@
      }
  );
 
+ 
+
  let alreadyUpdating = true;
- let gameUpdater = setInterval(
-     async function () {
-         if (alreadyUpdating) {
-             return;
-         }
-         alreadyUpdating = true;
-         try {
-             var response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:$game.id})});
-             var data = await response.json();
-         }
-         catch (err) {
-             console.log('Error updating',err);
-         }
-         if (data) {
-             game.update(oldGame => {
-                 newGame = gameFromJson(data);
-                 var mergedPlayers;
-                 if (newGame.players && oldGame.players) {
-                     mergedPlayers = [...oldGame.players];
-                     for (let p of oldGame.players) {
-                         if (mergedPlayers.indexOf(p)==-1) {
-                             mergedPlayers.push(p);
-                         }
+
+ async function checkForUpdates () {
+     if (alreadyUpdating) {
+         return;
+     }
+     alreadyUpdating = true;
+     console.log('Checking...',new Date().getTime());
+     try {
+         var response = await fetch(API_URL,{method:'post',body:JSON.stringify({id:$game.id})});
+         var data = await response.json();
+     }
+     catch (err) {
+         console.log('Error updating',err);
+     }
+     if (data) {
+         game.update(oldGame => {
+             newGame = gameFromJson(data);
+             var mergedPlayers;
+             if (newGame.players && oldGame.players) {
+                 mergedPlayers = [...oldGame.players];
+                 for (let p of oldGame.players) {
+                     if (mergedPlayers.indexOf(p)==-1) {
+                         mergedPlayers.push(p);
                      }
                  }
-                 else {
-                     mergedPlayers = newGame.players || oldGame.players
-                 }
-                 return {
-                     ...oldGame,
-                     ...newGame,
-                     players : mergedPlayers,
-                 }
-             });
+             }
+             else {
+                 mergedPlayers = newGame.players || oldGame.players
+             }
+             return {
+                 ...oldGame,
+                 ...newGame,
+                 players : mergedPlayers,
+             }
+         });
+     }
+     alreadyUpdating = false;
+     if ($game.startTime && !isNaN($game.startTime)) {
+         // when should we check...
+         const endTime = $game.timerLength * 1000 + $game.startTime
+         const now = new Date().getTime();
+         if (endTime > now) {
+             console.log('Check again in ',endTime-now,'ms');
+             setTimeout(checkForUpdates,endTime - now);
          }
-         alreadyUpdating = false;
-     },
-     1500
+         else {
+             // Otherwise, we are overdue...
+             // we'll do a kind of reverse backoff... i.e. if it's 1 second past due, check in one second,
+             // if it's one minute, check in a minute, and so on...
+             console.log('Check again in ',-1*(endTime-now),'ms');
+             setTimeout(checkForUpdates,-1 * (endTime - now));
+         }
+     }
+     else {
+         lastInterval = lastInterval * 2;
+         console.log('exponential backoff... check in',lastInterval);
+         setTimeout(checkForUpdates,lastInterval);
+     }
+ }
+
+ let lastInterval = 2000
+
+ function checkForUpdatesInteractive () {
+     lastInterval = 2000;
+     checkForUpdates();
+ }
+
+ let gameUpdater = setTimeout(
+     checkForUpdates,
+     lastInterval
  );
 
  $: { if (gameId) {
@@ -150,9 +186,7 @@
     <div class="head" >
         {#if gameId}
         <div class="name left">
-            {#if !$player}
-            Player <input type="text" on:blur={(e)=>$player=e.target.value}>
-            {:else}
+            {#if $player}
             {$player} <button class="lowkey" on:click={()=>$player=''}>✎</button>
             {/if}
         </div>
@@ -163,7 +197,12 @@
         </select>
         <div class="right">
             {#if currentStep==strings.playStep && $player!=$game.currentPlayer}
-            <button on:click={takeTurn}>MY TURN!</button>
+            <button on:click={takeTurn}>My Turn!</button>
+            {/if}
+            {#if alreadyUpdating}
+            Updating...
+            {:else}
+            <button on:click={checkForUpdatesInteractive}>⟳</button>
             {/if}
         </div>
         {/if}
@@ -172,7 +211,14 @@
         {#if !gameId}
         <button id="new" on:click="{newGame}">Start Game?</button>
         {:else}
+        {#if !$player}
+        <div>
+            Set Player Name
+            <br><input type="text" on:blur={(e)=>$player=e.target.value}>
+        </div>
+        {:else}
         <Words/>
+        {/if}
         {/if}
     </div> <!-- end center -->
     <div class="foot" >
@@ -186,7 +232,7 @@
         <button class="right" on:click="{leaveGame}">Leave Game</button>
         {/if}
     </div>
-</div>
+ </div>
 
 <style>
  .left {
@@ -207,6 +253,11 @@
      flex-grow: 2;
      display: flex;
      align-self: stretch;
+ }
+
+ .center div {
+     text-align: center;
+     margin: auto;
  }
 
  .foot * {
