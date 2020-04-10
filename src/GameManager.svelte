@@ -5,6 +5,8 @@
  let gameName;
  let currentStep;
  let editNameMode=false;
+ let playerNameInputValue=$player||''
+ import Entry from './Entry.svelte';
  import Words from './Words.svelte';
  import strings from './strings.js';
  import { game, gameFromJson, updateGameDB, player, startTimer } from './stores.js';
@@ -14,6 +16,9 @@
 
  function takeTurn () {
      $game.currentPlayer = $player;
+     if (!$game.players || $game.players.indexOf($player)==-1) {
+         addPlayerNameToGame($player);
+     }
      updateGameDB(
          $game
      )
@@ -205,10 +210,12 @@
             {/each}
         </select>
         <div class="right">
-            {#if currentStep==strings.playStep && $player!=$game.currentPlayer}
+            {#if currentStep==strings.playStep}
+            {#if $player!=$game.currentPlayer}
             <button on:click={takeTurn}>My Turn!</button>
             {:else}
             <button on:click={finishTurn}>Done</button>
+            {/if}
             {/if}
             {#if alreadyUpdating}
             Updating...
@@ -224,8 +231,12 @@
         {:else}
         {#if !$player}
         <div>
-            Set Player Name
-            <br><input type="text" on:blur={(e)=>$player=e.target.value}>
+            <Entry
+                label="Set Player Name"
+                bind:value={playerNameInputValue}
+                on:submit={()=>$player=playerNameInputValue}
+                placeholder="Name..."
+                />
         </div>
         {:else}
         <Words/>
@@ -240,11 +251,13 @@
         {:else}
         {gameName} <button class="lowkey" on:click={()=>editNameMode=true}>✎</button>
         {/if}
+        {#if $game.players}
         {#each $game.players as player,i}
         <span
             class:active={player==$game.currentPlayer}
         >{player}</span>{#if (i+1 < $game.players.length)},{/if}
         {/each}
+        {/if}
         <button class="right" on:click="{leaveGame}">Leave Game</button>
         {/if}
     </div>
