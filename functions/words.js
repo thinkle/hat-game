@@ -107,16 +107,18 @@ async function listWords ({session}) {
 }
 
 async function addWord ({word, session, category='name'}) {
-    return faunaQuery(
-        q.Create(
-            q.Ref('classes/Words'),
-            {
-                data: {
-                    word, session, category, outOfHat:false,
+    
+    await faunaQuery(
+            q.Create(
+                q.Ref('classes/Words'),
+                {
+                    data: {
+                        word, session, category, outOfHat:false,
+                    }
                 }
-            }
-        )
+            )
     );
+    return await listWords({session});
 }
 
 async function putAllWordsBack({session}) {
