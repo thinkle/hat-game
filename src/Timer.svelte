@@ -45,7 +45,7 @@
         {#if secondsTicked > timerLength}
         <b>{secondsTicked - timerLength} Over!</b>
         {/if}
-        <button class="lowkey" on:click="{startTimer}">Reset</button>
+        <button class="lowkey" on:click="{startTimer}">Restart Timer</button>
         {:else}
         <button class="lowkey" on:click={startTimer}>Start Clock</button>
         {/if}
