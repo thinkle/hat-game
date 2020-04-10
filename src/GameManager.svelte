@@ -20,6 +20,15 @@
      setTimeout(startTimer,1000);
  }
 
+
+ function finishTurn () {
+     $game.currentPlayer = "No man's land";
+     updateGameDB(
+         $game
+     );
+ }
+ 
+
  const unsubscribe = game.subscribe(
      value => {
          if (value) {
@@ -198,6 +207,8 @@
         <div class="right">
             {#if currentStep==strings.playStep && $player!=$game.currentPlayer}
             <button on:click={takeTurn}>My Turn!</button>
+            {:else}
+            <button on:click={finishTurn}>Done</button>
             {/if}
             {#if alreadyUpdating}
             Updating...
@@ -228,13 +239,27 @@
         <button type="submit" on:click|preventDefault={updateName}>Set Name</button>
         {:else}
         {gameName} <button class="lowkey" on:click={()=>editNameMode=true}>✎</button>
-        {/if}        
+        {/if}
+        {#each $game.players as player,i}
+        <span
+            class:active={player==$game.currentPlayer}
+        >{player}</span>{#if (i+1 < $game.players.length)},{/if}
+        {/each}
         <button class="right" on:click="{leaveGame}">Leave Game</button>
         {/if}
     </div>
  </div>
 
-<style>
+ <style>
+
+  span {
+      font-style: italic;
+  }
+  span.active {
+      text-decoration: underline;
+      font-weight: bold;
+  }
+  
  .left {
      margin-right: auto;
  }
@@ -325,4 +350,7 @@
      align-items: center;
  }
 
+ .center button {
+     margin: auto;
+ }
 </style>
