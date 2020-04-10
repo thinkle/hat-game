@@ -68,7 +68,7 @@
          );
          const data = await resp.json();
          console.log('Got me the data...',data);
-         words = [...words,data]
+         words = [...data.data]
          newWord = '';
      }
      catch (err) {
