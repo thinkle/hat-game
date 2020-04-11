@@ -3,12 +3,12 @@
  import { localHat } from './stores.js';
  import {elasticOut,quintOut} from 'svelte/easing';
  import { flip } from 'svelte/animate';
- $:hat = $localHat.filter((w)=>w.word&&w.outOfHat==false)
- $:complete = $localHat.filter((w)=>w.word&&w.outOfHat==true&&!w.current)
+ $:hat = $localHat.filter((w)=>w.word&&!w.outOfHat&&!w.current)
+ $:complete = $localHat.filter((w)=>w.word&&w.outOfHat)
  $:current = $localHat.filter((w)=>w.word&&w.current)
  import { createEventDispatcher } from 'svelte';
  const dispatch = createEventDispatcher();
-
+ 
 
  const cachedStyles = {}
 
@@ -43,13 +43,15 @@
      //complete = [...complete,...current]
      const wasFirst = current.length == 0;
      current.forEach(
-         (w)=>w.current = false
+         (w)=>{
+             w.current = false
+             w.outOfHat = true;
+         }
      )
      if (hat.length > 0) {
          const idx = Math.floor(Math.random()*hat.length);
          console.log('Random index',idx,'of',hat.length);
          hat[idx].current = true;
-         hat[idx].outOfHat = true;
      }
      delete cachedStyles[current.word]
      $localHat = $localHat
@@ -65,7 +67,6 @@
  function swap () {
      //hat = [...hat,...current]
      const cw = current[0]
-     cw.outOfHat = false;
      cw.current = false;
      $localHat = $localHat;
      dispatch('return',{value:[...current]});
