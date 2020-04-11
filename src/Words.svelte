@@ -66,9 +66,10 @@
               })
              }
          );
-         const data = await resp.json();
-         console.log('Got me the data...',data);
-         words = [...data.data]
+         //const data = await resp.json();
+         //console.log('Got me the data...',data);
+         //words = [...data.data]
+         await handleNewWords(resp);
          newWord = '';
      }
      catch (err) {
@@ -162,14 +163,6 @@
      if (response) {handleNewWords(response);}
  }
 
- function onFloor () {
-     completeWords.push(currentWord)
-     currentWord = ''
-     completeWords = completeWords;
-     pullWord();
- }
-
-
  async function handleNewWords (response) {
      const data = await response.json();
      console.log('words will be',data.data);
@@ -196,6 +189,7 @@
                  }
              }
          )
+     console.log('localHat is...',$localHat);
  }
 
  async function getWords () {
@@ -222,7 +216,7 @@
          
 </script>
 
-    <div class="verticalAlign">
+<div class="verticalAlign">
         {#if busy}Busy busy busy...{/if}
         <div class="head" >
             {#if step==strings.addStep||step==strings.reviewStep}<h2>{words.length} added...</h2>{/if}
