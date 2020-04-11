@@ -9,7 +9,7 @@
  import Entry from './Entry.svelte';
  import Words from './Words.svelte';
  import strings from './strings.js';
- import { game, gameFromJson, updateGameDB, player, startTimer } from './stores.js';
+ import { game, gameFromJson, updateGameDB, player, startTimer, addPlayerNameToGame } from './stores.js';
  import { onMount } from 'svelte';
 
  const API_URL = '/.netlify/functions/game' 
@@ -137,7 +137,8 @@
      alreadyUpdating = true;
      const response = await fetch(`${API_URL}?mode=new`);
      const data = await response.json();
-     console.log(data);
+     console.log
+     (data);
      game.update(s => gameFromJson(data))
      alreadyUpdating = false;
  }
