@@ -4,8 +4,11 @@
  import {elasticOut,quintOut} from 'svelte/easing';
  import { flip } from 'svelte/animate';
  $:hat = $localHat.filter((w)=>w.word&&!w.outOfHat&&!w.current)
- $:complete = $localHat.filter((w)=>w.word&&w.outOfHat)
+ $:complete = $localHat.filter((w)=>w.word&&w.outOfHat).sort((a,b)=>a.order>b.order&&1||a.order<b.order&&-1||0);
  $:current = $localHat.filter((w)=>w.word&&w.current)
+ $:topOfTheOrder = Math.max(...$localHat.map((w)=>w.order||0))
+ $: console.log('Top of the order is',topOfTheOrder,$localHat);
+ $: console.log('localHat orders are ',$localHat.map((w)=>w.order||0))
  import { createEventDispatcher } from 'svelte';
  const dispatch = createEventDispatcher();
  
@@ -46,6 +49,7 @@
          (w)=>{
              w.current = false
              w.outOfHat = true;
+             w.order = topOfTheOrder + 1
          }
      )
      if (hat.length > 0) {
@@ -151,6 +155,7 @@
         <div class="complete">
             {#each complete as w (w.word)}
             <div
+                order={`complete-${w.order}`}
                 style={getRandomPosition(w.word)}
                 class="word" animate:flip="{{duration:200}}" id={w.word} in:receive="{{key:w.word}}" out:send="{{key:w.word}}"> {w.word}
             </div>
