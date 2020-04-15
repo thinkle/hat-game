@@ -78,8 +78,9 @@ div div:focus-within {
 
  button {
      margin-left: 0;
-     border-radius: 0px 5px 5px 0px 0px;
+     border-radius: 0px 5px 5px 0px;
      font-size: 1.2em;
+     align-self: stretch;
  }
 
  .disabled {
