@@ -36,6 +36,7 @@
      height: 100vh;
      height: -webkit-fill-available;
      width: 100%;
+     overflow: hidden;
      position: absolute;
      top: 0;
      left: 0;
