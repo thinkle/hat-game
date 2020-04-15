@@ -26,16 +26,22 @@
      font-size: 14pt;
      color: #aaa;
      text-align: center;
-     height: 22px;
+     height: 2em;
      background-color: black;
      padding-top: 0.5em;
      padding-bottom: 0.5em;
+     box-sizing: border-box;
  }
  div {
-     height: calc(100vh - 22px);
+     height: 100vh;
+     height: -webkit-fill-available;
+     width: 100%;
+     position: absolute;
+     top: 0;
+     left: 0;
      display: flex;
      flex-direction: column;
      justify-content: center;
      align-items: stretch;
  }
- </style>
+</style>
