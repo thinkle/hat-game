@@ -294,6 +294,7 @@
      flex-direction: row;
      align-items: center;
      align-self: stretch;
+     z-index: 2;
  }
 
  .center {
