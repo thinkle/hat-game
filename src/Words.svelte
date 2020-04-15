@@ -230,8 +230,9 @@
         </div>
         <div class="middle">
             {#if !$game.players || $game.players.length <= 1}
-            (Copy paste the URL above to invite others to your game!)
-            <br>Here's <a href={window.location}> a copyable link</a> if you prefer
+            <div>(Copy paste the URL above to invite others to your game!)
+                <br>Here's <a href={window.location}> a copyable link</a> if you prefer
+            </div>
             {/if}
             {#if step==strings.reviewStep||step==strings.addStep}        
             <Entry
@@ -301,6 +302,9 @@
      flex-grow: 2;
      flex-direction: column;
  }
+ .middle div {
+     margin: 1em;
+ }
  .bigbutton button {
      font-size: 2em;
      padding: 1em;
@@ -328,6 +332,7 @@
  .foot {
      margin-top: auto;
      z-index: 2;
+     position: relative; /* So it stays on top */
  }
  input {
      font-size: 3em;
