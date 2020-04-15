@@ -279,7 +279,16 @@
  }
  .right {
      margin-left: auto;
- }
+  }
+  .left,.right {
+      display: flex;
+      align-items: center;
+  }
+
+  .left button,.right button {
+      align-self: stretch;
+  }
+  
  .foot,.head {
      display: flex;
      flex-direction: row;
