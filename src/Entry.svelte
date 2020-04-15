@@ -58,6 +58,7 @@
  div {
      display: flex;
      align-items: center;
+     max-width: 100%;
  }
 
 div div:focus-within {
