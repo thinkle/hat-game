@@ -212,25 +212,31 @@
      await getWords()
  }); 
 
-let doneWithTurn = false;
+ let doneWithTurn = false;
 
- $ : if (step!=strings.playStep) {
+ $ : if (step!=strings.playStep || $player!=$game.currentPlayer) {
      doneWithTurn = false;
  }
 
  function remindToFinish (event) {
      console.log('Done?');
-     doneWithTurn = true;
+     if ($player==$game.currentPlayer) {
+         doneWithTurn = true;
+     }
  }
-         
+ 
 </script>
 
 <div class="verticalAlign">
     {#if busy}Busy busy busy...{/if}
-    {#if doneWithTurn}Let someone else go!{/if}
-        <div class="head" >
+    {#if doneWithTurn}
+    <p transition:fly>
+        Time's up! Click done and tell someone else to click "My Turn"!
+    </p>
+    {/if}
+    <div class="head" >
             {#if step==strings.addStep||step==strings.reviewStep}<h2>{words.length} added...</h2>{/if}
-            {#if step==strings.playStep}<Timer on:done={remindToFinish} />
+            {#if step==strings.playStep}<Timer on:reset="{()=>doneWithTurn=false}" on:over={remindToFinish} />
             <div>
                 <span class="green" >{score} words</span>
                 <span class="red" >{skips} skips</span>
