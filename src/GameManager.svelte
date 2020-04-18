@@ -1,16 +1,22 @@
 <script>
+ import { onDestroy } from 'svelte';
 
  let gameId;
  let nameInput;
  let gameName;
  let currentStep;
  let editNameMode=false;
- let playerNameInputValue=$player||''
+ import ReloadButton from './ReloadButton.svelte';
  import Entry from './Entry.svelte';
  import Words from './Words.svelte';
  import strings from './strings.js';
  import { game, gameFromJson, updateGameDB, player, startTimer, addPlayerNameToGame } from './stores.js';
  import { onMount } from 'svelte';
+ import About from './About.svelte';
+ const intervals = []
+ onDestroy(()=>intervals.forEach((i)=>clearInterval(i)));
+ 
+ let playerNameInputValue=$player||''
 
  const API_URL = '/.netlify/functions/game' 
 
@@ -87,6 +93,7 @@
              }
          });
      }
+     console.log('Game is now: ',$game);
      alreadyUpdating = false;
      let timeoutTime = lastInterval;
      if ($game.startTime && !isNaN($game.startTime)) {
@@ -108,9 +115,24 @@
          lastInterval = lastInterval * 2;
      }
      console.log('check again in',timeoutTime/1000);
+     currentTimeout = timeoutTime;
+     lastCheck = new Date().getTime();
      setTimeout(checkForUpdates,timeoutTime);
  }
 
+ intervals.push(setInterval(updateTimerTimer,500));
+ function updateTimerTimer () {
+     //console.log('update timer timer');
+     if (lastCheck) {
+         let totalTime = currentTimeout;
+         let amountWaited = new Date().getTime() - lastCheck;
+         percentageWaiting = amountWaited/totalTime;
+     }
+ }
+
+ let percentageWaiting = 0;
+ let lastCheck;
+ let currentTimeout = 0;
  let lastInterval = 2000
 
  function checkForUpdatesInteractive () {
@@ -195,6 +217,11 @@
  }
 
 
+ let aboutVisible = false;
+ function showAbout () {
+     aboutVisible = true;
+ }
+
 </script>
 
 <div class="container">
@@ -218,26 +245,34 @@
             <button on:click={finishTurn}>Done</button>
             {/if}
             {/if}
-            {#if alreadyUpdating}
-            Updating...
-            {:else}
-            <button on:click={checkForUpdatesInteractive}>⟳</button>
-            {/if}
+            <ReloadButton busy={alreadyUpdating}
+                          percentage={percentageWaiting}
+                          total="{currentTimeout/1000}"
+                          on:click={checkForUpdatesInteractive}>
+                
+            </ReloadButton>
         </div>
         {/if}
     </div> <!-- end head -->
     <div class="center" >
+        {#if aboutVisible}
+        <About on:close="{()=>aboutVisible=false}" />
+        {/if}
         {#if !gameId}
         <button id="new" on:click="{newGame}">Start Game?</button>
         {:else}
         {#if !$player}
         <div>
             <Entry
-                label="Set Player Name"
+                label="Your Name"
                 bind:value={playerNameInputValue}
                 on:submit={()=>$player=playerNameInputValue}
                 placeholder="Name..."
-                />
+                button="✓"
+            />
+            <div>
+                Confused what's going on? <a on:click="{showAbout}">Read about this game.</a>
+            </div>
         </div>
         {:else}
         <Words/>
@@ -253,12 +288,16 @@
         {gameName} <button class="lowkey" on:click={()=>editNameMode=true}>✎</button>
         {/if}
         {#if $game.players}
-        {#each $game.players as player,i}
-        <span
-            class:active={player==$game.currentPlayer}
-        >{player}</span>{#if (i+1 < $game.players.length)},{/if}
-        {/each}
+        <div class="players">
+            {#each $game.players as player,i}
+            <span
+                class:active={player==$game.currentPlayer}
+            >{player}</span>{#if (i+1 < $game.players.length)},{/if}
+            {/each}
+        </div>
         {/if}
+
+        <button class="right" on:click="{showAbout}">About</button>
         <button class="right" on:click="{leaveGame}">Leave Game</button>
         {/if}
     </div>
@@ -343,7 +382,7 @@
  }
 
  button, entry, select {
-     font-size: 1.5em;
+     font-size: 18px;
  }
  
  .modal {
@@ -364,7 +403,7 @@
  button#new {
      border: 3px solid #222;
      padding: 2em;
-     font-size: 3em;
+     font-size: 22px;
  }
 
  .container {
@@ -376,5 +415,11 @@
 
  .center button {
      margin: auto;
- }
+  }
+
+  .players {
+      flex-shrink: 1;
+      overflow-x: scroll;
+  }
+  
 </style>
