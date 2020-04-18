@@ -20,6 +20,11 @@ export let total
 </button>
 
 <style>
+ span {
+     position: relative;
+     z-index: 2;
+     top: -2px;
+ }
  button {
      overflow: hidden;
      width: 36px;
@@ -33,7 +38,7 @@ export let total
      color: white;
  }
  div {
-     color: #ddf;
+     color: #efefff;
      font-weight: heavy;
      position: absolute;
      width: 36px;
@@ -45,7 +50,7 @@ export let total
      left: 0;
  }
  .loader {
-     background-color: #a8b7ff;
+     background-color: #343477;
  }
 
  .busy {
