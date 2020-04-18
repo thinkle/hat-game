@@ -1,5 +1,6 @@
 <script>
  import { onDestroy } from 'svelte';
+ import { fade, fly } from 'svelte/transition';
 
  let gameId;
  let nameInput;
@@ -256,7 +257,7 @@
     </div> <!-- end head -->
     <div class="center" >
         {#if aboutVisible}
-        <About on:close="{()=>aboutVisible=false}" />
+        <div transition:fade><About on:close="{()=>aboutVisible=false}" /></div>
         {/if}
         {#if !gameId}
         <button id="new" on:click="{newGame}">Start Game?</button>
