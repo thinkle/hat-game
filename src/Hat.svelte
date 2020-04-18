@@ -174,7 +174,7 @@
 
  #current {
      padding: 1em;
-     font-size: 2em;
+     font-size: 2rem;
      font-weight: bold;
      z-index: 2;
  }
