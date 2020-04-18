@@ -98,9 +98,10 @@
  }
  .outer {
      z-index: 999;
-     position: absolute;
+     position: fixed;
+     top: 0;
      overflow-y: scroll;
-     background-color: #000c;
+     background-color: #000e;
      transition: background-color 300ms;
      color: #eff;
  }
