@@ -1,6 +1,7 @@
 <script>
  import {game,startTimer,cancelTimer,localStartTime} from './stores.js';
- import {onMount} from 'svelte';
+ import {onMount,onDestroy,createEventDispatcher} from 'svelte';
+ const dispatch = createEventDispatcher(); 
  
  $:start = $game && !isNaN($game.startTime) && $game.startTime || !isNaN(localStartTime) && localStartTime ;
  $:timer = $game && $game.timerLength;
@@ -11,9 +12,17 @@
 
  $: secondsTicked = start && Math.floor((now.getTime() - start)/1000);
 
+ $: if (start) {
+     dispatch('reset',{start})
+ }
+ 
+
  onMount(() => {
      const interval = setInterval(() => {
 	 now = new Date();
+         if (secondsTicked > timerLength) {
+             dispatch('over',{secondsTicked})
+         }
      }, 1000);
 
      return () => {
@@ -29,6 +38,8 @@
          return `background-color:green;width:${100*secondsTicked/timerLength}%`
      }
  }
+
+ 
 
 </script>
 <main>
