@@ -80,7 +80,7 @@ div div:focus-within {
  button {
      margin-left: 0;
      border-radius: 0px 5px 5px 0px;
-     font-size: 1.2em;
+     font-size: 18px;
      align-self: stretch;
  }
 
@@ -90,8 +90,12 @@ div div:focus-within {
      cursor: busy
  }
 
+ label {
+     font-size: 16px;
+ }
+ 
  input {
-     font-size: 1.5em;
+     font-size: 18px;
  }
 
 </style>
