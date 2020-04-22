@@ -313,6 +313,12 @@
       text-decoration: underline;
       font-weight: bold;
   }
+  .players {
+      display: flex;
+  }
+  .players span {
+      max-height: 1em;
+  }
   
  .left {
      margin-right: auto;
