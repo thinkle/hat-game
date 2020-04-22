@@ -5,8 +5,10 @@
  import { fade, fly, crossfade, scale } from 'svelte/transition';
  import Timer from './Timer.svelte';
  import { cubicOut, elasticOut } from 'svelte/easing';
+
  var skips=0;
  var score=0;
+ var reviewSure = false;
  
  import strings from './strings.js';
  let words = []
@@ -245,7 +247,7 @@
             {/if}
         </div>
         <div class="middle">
-            {#if !$game.players || $game.players.length <= 1}
+            {#if (!$game.players || $game.players.length <= 1) && (step==strings.playStep||step==strings.addStep)}
             <div>(Copy paste the URL above to invite others to your game!)
                 <br>Here's <a href={window.location}> a copyable link</a> if you prefer
             </div>
@@ -280,23 +282,52 @@
                 on:return="{onSwap}"
             />
             {/if}
-        </div>
-        <div class="foot">
             {#if step==strings.reviewStep}
+            {#if reviewSure}
             <h4>the words...</h4>
             <ul>
                 {#each words as word}
                 <li id={word.id}>
                     {word.data.word}
-                    <button class="lowkey" on:click={()=>deleteWord(word)}>-</button>
+                    <button class="lowkey" on:click={()=>deleteWord(word)}>🗑</button>
                 </li>
                 {/each}
             </ul>
-            {/if}
+            {:else}
+            <p>Are you sure you want to see all the words?
+                <br>(for some games, this kind of ruins the game, but it will let you delete words & stuff
+                )</p>
+                <button on:click={()=>reviewSure=true}>Yes, I'm sure</button>
+                {/if}
+                {/if}
+
         </div>
-    </div>
+        <div class="foot">
+        </div>
+</div>
 
 <style>
+ h4 {
+     margin: 0;
+ }
+ 
+ ul {
+     max-height: 40vh;
+     overflow-y: scroll;
+     padding-left: 0;
+ }
+ li {
+     list-style: none;
+     border: 1px solid grey;
+     padding: 1em;
+     margin: 0.5em;
+     display: flex;
+ }
+
+ li button {
+     margin-left: auto;
+ }
+ 
  .container {
      position: relative;
  }
